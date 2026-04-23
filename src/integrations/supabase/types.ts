@@ -14,16 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leads: {
+        Row: {
+          car_category: string
+          car_model: string | null
+          city: string
+          condition: Database["public"]["Enums"]["car_condition"]
+          created_at: string
+          estimated_price_max: number | null
+          estimated_price_min: number | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string
+          source: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          car_category: string
+          car_model?: string | null
+          city: string
+          condition: Database["public"]["Enums"]["car_condition"]
+          created_at?: string
+          estimated_price_max?: number | null
+          estimated_price_min?: number | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone: string
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          car_category?: string
+          car_model?: string | null
+          city?: string
+          condition?: Database["public"]["Enums"]["car_condition"]
+          created_at?: string
+          estimated_price_max?: number | null
+          estimated_price_min?: number | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string
+          source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      car_condition: "excellent" | "good" | "poor"
+      lead_status: "new" | "contacted" | "converted" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +259,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      car_condition: ["excellent", "good", "poor"],
+      lead_status: ["new", "contacted", "converted", "rejected"],
+    },
   },
 } as const
