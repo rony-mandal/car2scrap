@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import {
   Select,
   SelectContent,
@@ -29,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LogOut, Download, Search, Loader2, Recycle } from "lucide-react";
+import { LogOut, Download, Search, Loader2, Recycle, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +69,7 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Lead | null>(null);
+  const [changePwOpen, setChangePwOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Admin Dashboard | car2scrap";
@@ -165,7 +167,19 @@ export default function Admin() {
             </span>
             <span className="font-[Poppins]">Admin Dashboard</span>
           </div>
-          <div className="flex items-center gap-3">
+          <<div className="flex items-center gap-3">
+  <span className="hidden sm:inline text-xs text-muted-foreground">
+    {user?.email}
+  </span>
+  <Button variant="outline" size="sm" onClick={() => setChangePwOpen(true)}>
+    <KeyRound className="h-4 w-4" />
+    <span className="hidden sm:inline">Change Password</span>
+  </Button>
+  <Button variant="outline" size="sm" onClick={signOut}>
+    <LogOut className="h-4 w-4" />
+    Sign out
+  </Button>
+</div>>
             <span className="hidden sm:inline text-xs text-muted-foreground">
               {user?.email}
             </span>
@@ -362,6 +376,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-medium">{children}</p>
+      <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
     </div>
   );
 }
