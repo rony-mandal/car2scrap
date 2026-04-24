@@ -18,7 +18,7 @@ export default function CalculatorPage() {
           Find your car's <span className="text-accent-green">scrap value</span>
         </h1>
         <p className="text-muted-foreground mt-3">
-          Honest, weight-based pricing using current metal recovery rates. No login required.
+          Select your brand, model, year and condition to get an honest, weight-based estimate using current metal recovery rates. No login required.
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export default function CalculatorPage() {
             <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li className="flex gap-2">
                 <CheckCircle2 className="h-4 w-4 text-accent-green mt-0.5 shrink-0" />
-                Vehicle kerb weight × current scrap metal rate
+                Brand &amp; model-specific kerb weight × current scrap metal rate
               </li>
               <li className="flex gap-2">
                 <CheckCircle2 className="h-4 w-4 text-accent-green mt-0.5 shrink-0" />
