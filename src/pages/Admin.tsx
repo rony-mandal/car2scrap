@@ -167,7 +167,7 @@ export default function Admin() {
             </span>
             <span className="font-[Poppins]">Admin Dashboard</span>
           </div>
-          <<div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
   <span className="hidden sm:inline text-xs text-muted-foreground">
     {user?.email}
   </span>
