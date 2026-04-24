@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Recycle, MailCheck } from "lucide-react";
+import { Loader2, Recycle, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,8 +13,9 @@ export default function Auth() {
   const navigate = useNavigate();
   const { session, loading } = useAuth();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
 
   useEffect(() => {
     document.title = "Admin Sign In | car2scrap";
@@ -26,20 +27,18 @@ export default function Auth() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !password) return;
     setBusy(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
-      },
+      password,
     });
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    setOtpSent(true);
+    navigate("/admin", { replace: true });
   }
 
   return (
@@ -56,65 +55,61 @@ export default function Auth() {
         </Link>
 
         <Card className="p-6 shadow-elegant">
-          {otpSent ? (
-            /* ── Check-your-inbox state ── */
-            <div className="py-6 text-center space-y-4">
-              <div className="mx-auto h-14 w-14 rounded-full bg-accent-green-soft flex items-center justify-center">
-                <MailCheck className="h-7 w-7 text-accent-green" />
-              </div>
-              <h1 className="text-xl font-bold font-[Poppins]">Check your inbox</h1>
-              <p className="text-sm text-muted-foreground">
-                We sent a sign-in link to{" "}
-                <strong className="text-foreground">{email}</strong>.
-                <br />
-                Click the link in the email to access the admin dashboard.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Didn't receive it?{" "}
-                <button
-                  className="underline hover:text-foreground"
-                  onClick={() => setOtpSent(false)}
-                >
-                  Try again
-                </button>
-              </p>
+          <h1 className="text-xl font-bold mb-1 font-[Poppins]">Admin Sign In</h1>
+          <p className="text-sm text-muted-foreground mb-6">
+            Enter your email and password to access the dashboard.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                autoFocus
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="mt-1.5"
+              />
             </div>
-          ) : (
-            /* ── Email entry state ── */
-            <>
-              <h1 className="text-xl font-bold mb-1 font-[Poppins]">Admin Access</h1>
-              <p className="text-sm text-muted-foreground mb-6">
-                Enter your email and we'll send you a secure sign-in link — no password needed.
-              </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    autoFocus
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="mt-1.5"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  variant="cta"
-                  className="w-full"
-                  disabled={busy || !email.trim()}
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative mt-1.5">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  tabIndex={-1}
                 >
-                  {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Send Sign-in Link
-                </Button>
-              </form>
-            </>
-          )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="cta"
+              className="w-full"
+              disabled={busy || !email.trim() || !password}
+            >
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+              Sign In
+            </Button>
+          </form>
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-4">
