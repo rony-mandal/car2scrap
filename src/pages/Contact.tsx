@@ -18,11 +18,12 @@ import { toast } from "sonner";
 import { BUSINESS, whatsappLink } from "@/lib/business";
 import { leadSchema, type LeadInput } from "@/lib/validation";
 import {
-  CAR_CATEGORIES,
+  CAR_BRANDS,
+  CAR_MODELS,
   CONDITION_LABELS,
   Condition,
-  MAX_YEAR,
-  MIN_YEAR,
+  FUEL_TYPES,
+  YEAR_OPTIONS,
 } from "@/lib/calculator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,23 +40,35 @@ export default function Contact() {
       name: "",
       phone: "",
       city: "",
-      car_category: "sedan",
+      brand: "",
       car_model: "",
-      year: MAX_YEAR - 8,
-      condition: "good",
+      fuel_type: undefined as unknown as LeadInput["fuel_type"],
+      year: undefined as unknown as number,
+      condition: undefined as unknown as Condition,
+      km_driven: undefined as unknown as number,
+      notes: "",
     },
     mode: "onTouched",
   });
 
+  const values = form.watch();
+  const filteredModels = CAR_MODELS.filter((m) => m.brand === values.brand);
+
   async function onSubmit(data: LeadInput) {
+    const brandLabel = CAR_BRANDS.find((b) => b.id === data.brand)?.label ?? data.brand;
+    const modelLabel = CAR_MODELS.find((m) => m.id === data.car_model)?.label ?? data.car_model;
     const { error } = await supabase.from("leads").insert({
       name: data.name,
       phone: data.phone,
       city: data.city,
-      car_category: data.car_category,
-      car_model: data.car_model || null,
+      car_category: brandLabel,
+      brand: brandLabel,
+      car_model: modelLabel,
+      fuel_type: data.fuel_type,
       year: data.year,
       condition: data.condition,
+      km_driven: data.km_driven,
+      notes: data.notes || null,
       source: "contact-page",
       status: "new",
     });
@@ -64,7 +77,9 @@ export default function Contact() {
       return;
     }
     supabase.functions
-      .invoke("notify-admin-lead", { body: { ...data, source: "contact-page" } })
+      .invoke("notify-admin-lead", {
+        body: { ...data, brand: brandLabel, source: "contact-page" },
+      })
       .catch(() => {});
     setSubmitted(true);
     toast.success("Request received! We'll contact you shortly.");
@@ -227,65 +242,156 @@ export default function Contact() {
                     )}
                   </div>
 
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <Label>Car type</Label>
+                      <Label>Brand</Label>
                       <Select
-                        value={form.watch("car_category")}
-                        onValueChange={(v) => form.setValue("car_category", v)}
+                        value={values.brand || ""}
+                        onValueChange={(v) => {
+                          form.setValue("brand", v, { shouldValidate: true });
+                          form.setValue("car_model", "", { shouldValidate: true });
+                        }}
                       >
                         <SelectTrigger className="mt-1.5">
-                          <SelectValue />
+                          <SelectValue placeholder="Select brand" />
                         </SelectTrigger>
                         <SelectContent>
-                          {CAR_CATEGORIES.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.label}
+                          {CAR_BRANDS.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="c-model">Model (optional)</Label>
+                      <Label>Model</Label>
+                      <Select
+                        value={values.car_model || ""}
+                        onValueChange={(v) =>
+                          form.setValue("car_model", v, { shouldValidate: true })
+                        }
+                        disabled={!values.brand}
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder={values.brand ? "Select model" : "Select brand first"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredModels.map((m) => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Manufacturing year</Label>
+                      <Select
+                        value={values.year ? String(values.year) : ""}
+                        onValueChange={(v) =>
+                          form.setValue("year", Number(v), { shouldValidate: true })
+                        }
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {YEAR_OPTIONS.map((y) => (
+                            <SelectItem key={y} value={String(y)}>
+                              {y}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Condition</Label>
+                      <Select
+                        value={values.condition || ""}
+                        onValueChange={(v) =>
+                          form.setValue("condition", v as Condition, { shouldValidate: true })
+                        }
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select condition" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.keys(CONDITION_LABELS) as Condition[]).map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {CONDITION_LABELS[c]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="c-km">Kilometers driven</Label>
                       <Input
-                        id="c-model"
-                        {...form.register("car_model")}
-                        placeholder="e.g. Swift"
+                        id="c-km"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        value={values.km_driven ?? ""}
+                        onChange={(e) =>
+                          form.setValue(
+                            "km_driven",
+                            e.target.value === ""
+                              ? (undefined as unknown as number)
+                              : Number(e.target.value),
+                            { shouldValidate: true },
+                          )
+                        }
+                        placeholder="e.g. 85000"
                         className="mt-1.5"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="c-year">Year</Label>
-                      <Input
-                        id="c-year"
-                        type="number"
-                        min={MIN_YEAR}
-                        max={MAX_YEAR}
-                        {...form.register("year", { valueAsNumber: true })}
-                        className="mt-1.5"
-                      />
+                      <Label>Fuel type</Label>
+                      <Select
+                        value={values.fuel_type || ""}
+                        onValueChange={(v) =>
+                          form.setValue("fuel_type", v as LeadInput["fuel_type"], {
+                            shouldValidate: true,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="mt-1.5">
+                          <SelectValue placeholder="Select fuel type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {FUEL_TYPES.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {f.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <div>
-                    <Label>Condition</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-1.5">
-                      {(Object.keys(CONDITION_LABELS) as Condition[]).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => form.setValue("condition", c)}
-                          className={`py-2.5 rounded-lg border text-sm font-medium transition-base ${
-                            form.watch("condition") === c
-                              ? "border-accent-green bg-accent-green-soft text-accent-green"
-                              : "border-border hover:border-primary/30"
-                          }`}
-                        >
-                          {CONDITION_LABELS[c]}
-                        </button>
-                      ))}
-                    </div>
+                    <Label htmlFor="c-notes">
+                      Additional notes{" "}
+                      <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                    </Label>
+                    <Textarea
+                      id="c-notes"
+                      value={values.notes ?? ""}
+                      onChange={(e) =>
+                        form.setValue("notes", e.target.value, { shouldValidate: true })
+                      }
+                      placeholder="Any damage, missing parts, accident history…"
+                      rows={3}
+                      maxLength={500}
+                      className="mt-1.5 resize-none"
+                    />
                   </div>
 
                   <Button
