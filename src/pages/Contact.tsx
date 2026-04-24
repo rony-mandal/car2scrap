@@ -31,7 +31,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    document.title = "Contact Us | car2scrap";
+    document.title = "Contact Us | Car2Scrap";
   }, []);
 
   const form = useForm<LeadInput>({

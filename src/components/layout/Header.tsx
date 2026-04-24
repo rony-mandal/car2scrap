@@ -26,7 +26,7 @@ export function Header() {
               <Recycle className="h-5 w-5" />
             </span>
             <span className="font-[Poppins]">
-              car<span className="text-accent-green">2</span>scrap
+              Car<span className="text-accent-green">2</span>Scrap
             </span>
           </Link>
 

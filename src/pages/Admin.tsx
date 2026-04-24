@@ -72,7 +72,7 @@ export default function Admin() {
   const [changePwOpen, setChangePwOpen] = useState(false);
 
   useEffect(() => {
-    document.title = "Admin Dashboard | car2scrap";
+    document.title = "Admin Dashboard | Car2Scrap";
   }, []);
 
   const { data: leads = [], isLoading } = useQuery({

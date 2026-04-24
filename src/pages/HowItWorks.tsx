@@ -7,7 +7,7 @@ import { LeadFormDialog } from "@/components/LeadFormDialog";
 export default function HowItWorks() {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    document.title = "How It Works | car2scrap";
+    document.title = "How It Works | Car2Scrap";
   }, []);
 
   return (

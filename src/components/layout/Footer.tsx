@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Recycle, Mail, Phone, MapPin } from "lucide-react";
+import { Recycle, Mail, Phone, MapPin, Instagram, Facebook } from "lucide-react";
 import { BUSINESS } from "@/lib/business";
 
 export function Footer() {
@@ -12,13 +12,40 @@ export function Footer() {
               <Recycle className="h-5 w-5" />
             </span>
             <span className="font-[Poppins]">
-              car<span className="text-accent-green">2</span>scrap
+              Car<span className="text-accent-green">2</span>Scrap
             </span>
           </Link>
           <p className="mt-4 text-sm text-primary-foreground/70 leading-relaxed">
             India's trusted car scrap & recycling platform. Govt. authorized,
             instant payment, free pickup.
           </p>
+
+          {/* Social Media */}
+          <div className="mt-5">
+            <p className="text-xs uppercase tracking-wide text-primary-foreground/50 mb-3">
+              Follow us
+            </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.instagram.com/car2scrap?igsh=MTU0Y2l3aGhyOG9n&utm_source=ig_contact_invite"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow car2scrap on Instagram"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#e6683c] hover:to-[#dc2743] transition-all duration-200"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.facebook.com/share/1B5hpxZR8V/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow car2scrap on Facebook"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 hover:bg-[#1877f2] transition-all duration-200"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -73,8 +100,30 @@ export function Footer() {
 
       <div className="border-t border-primary-foreground/10">
         <div className="container py-5 flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-primary-foreground/60">
-          <span>© {new Date().getFullYear()} car2scrap. All rights reserved.</span>
-          <span>Govt. authorized vehicle recycling facility</span>
+          <span>© {new Date().getFullYear()} Car2Scrap. All rights reserved.</span>
+          <div className="flex items-center gap-4">
+            <span>Govt. authorized vehicle recycling facility</span>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.instagram.com/car2scrap?igsh=MTU0Y2l3aGhyOG9n&utm_source=ig_contact_invite"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="hover:text-accent-green transition-colors"
+              >
+                <Instagram className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href="https://www.facebook.com/share/1B5hpxZR8V/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="hover:text-accent-green transition-colors"
+              >
+                <Facebook className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

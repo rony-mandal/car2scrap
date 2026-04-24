@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 
 export default function CalculatorPage() {
   useEffect(() => {
-    document.title = "Scrap Car Price Calculator | car2scrap";
+    document.title = "Scrap Car Price Calculator | Car2Scrap";
   }, []);
 
   return (
