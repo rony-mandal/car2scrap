@@ -10,9 +10,10 @@ const BADGES = [
 
 export function TrustBadges() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div className="flex flex-wrap gap-3">
       {BADGES.map(({ icon: Icon, label }) => (
         <div
+          min-w-fit
           key={label}
           className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3 shadow-card"
         >

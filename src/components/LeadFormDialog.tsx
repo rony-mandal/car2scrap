@@ -138,7 +138,7 @@ export function LeadFormDialog({
         .catch(() => {/* silent */});
 
       setSubmitted(true);
-      toast.success("Request received! Our team will call you within 30 minutes.");
+      toast.success("Request received! Our team will call you shortly.");
     } catch (e) {
       console.error(e);
       toast.error("Could not submit. Please try again or call us.");
@@ -170,7 +170,7 @@ export function LeadFormDialog({
               Estimated quote: <strong className="text-primary">{formatINR(breakdown.min)} – {formatINR(breakdown.max)}</strong>
             </p>
             <p className="text-sm text-muted-foreground">
-              Our team will call you on <strong>{values.phone}</strong> within 30 minutes
+              Our team will call you on <strong>{values.phone}</strong> shortly
               to confirm pickup.
             </p>
             <Button onClick={() => onOpenChange(false)} className="mt-4">

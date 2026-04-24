@@ -67,7 +67,7 @@ export default function Contact() {
       .invoke("notify-admin-lead", { body: { ...data, source: "contact-page" } })
       .catch(() => {});
     setSubmitted(true);
-    toast.success("Request received! We'll call you within 30 minutes.");
+    toast.success("Request received! We'll contact you shortly.");
   }
 
   return (
@@ -81,7 +81,7 @@ export default function Contact() {
             Talk to a real human — <span className="text-accent-green">no bots</span>
           </h1>
           <p className="text-primary-foreground/80 mt-4">
-            Call, WhatsApp, or fill the form. We respond within 30 minutes during business hours.
+            Call, WhatsApp, or Fill the Form.
           </p>
         </div>
       </section>
@@ -172,7 +172,7 @@ export default function Contact() {
                 <h2 className="text-2xl font-bold font-[Poppins]">Request Received!</h2>
                 <p className="text-muted-foreground">
                   Our team will call you on <strong>+91 {form.getValues("phone")}</strong>{" "}
-                  within 30 minutes.
+                  shortly.
                 </p>
                 <Button variant="outline" onClick={() => setSubmitted(false)}>
                   Submit another
@@ -182,7 +182,7 @@ export default function Contact() {
               <>
                 <h2 className="text-2xl font-bold mb-1 font-[Poppins]">Request a callback</h2>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Fill in the details and we'll reach out within 30 minutes.
+                  Fill in the details and we'll reach out to you.
                 </p>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
                   <div className="grid sm:grid-cols-2 gap-4">
