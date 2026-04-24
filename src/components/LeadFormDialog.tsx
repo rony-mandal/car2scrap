@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -19,17 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
-  CAR_CATEGORIES,
+  CAR_BRANDS,
   CAR_MODELS,
   CONDITION_LABELS,
   Condition,
-  MAX_YEAR,
-  MIN_YEAR,
+  FUEL_TYPES,
+  YEAR_OPTIONS,
   calculatePrice,
   formatINR,
 } from "@/lib/calculator";
@@ -45,6 +44,19 @@ interface LeadFormDialogProps {
 
 const STEPS = ["Car details", "Your contact", "Review"] as const;
 
+const emptyDefaults: Partial<LeadInput> = {
+  name: "",
+  phone: "",
+  city: "",
+  brand: "",
+  car_model: "",
+  fuel_type: undefined,
+  year: undefined as unknown as number,
+  condition: undefined as unknown as Condition,
+  km_driven: undefined as unknown as number,
+  notes: "",
+};
+
 export function LeadFormDialog({
   open,
   onOpenChange,
@@ -57,34 +69,15 @@ export function LeadFormDialog({
 
   const form = useForm<LeadInput>({
     resolver: zodResolver(leadSchema),
-    defaultValues: {
-      name: "",
-      phone: "",
-      city: "",
-      car_category: "sedan",
-      car_model: "",
-      year: MAX_YEAR - 8,
-      condition: "good",
-      ...prefill,
-    },
+    defaultValues: { ...emptyDefaults, ...prefill } as LeadInput,
     mode: "onChange",
   });
 
-  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setStep(0);
       setSubmitted(false);
-      form.reset({
-        name: "",
-        phone: "",
-        city: "",
-        car_category: "sedan",
-        car_model: "",
-        year: MAX_YEAR - 8,
-        condition: "good",
-        ...prefill,
-      });
+      form.reset({ ...emptyDefaults, ...prefill } as LeadInput);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -92,50 +85,62 @@ export function LeadFormDialog({
   const values = form.watch();
 
   const filteredModels = useMemo(
-    () => CAR_MODELS.filter((m) => m.category === values.car_category),
-    [values.car_category],
+    () => CAR_MODELS.filter((m) => m.brand === values.brand),
+    [values.brand],
   );
+
+  const breakdownReady =
+    !!values.brand && !!values.car_model && !!values.condition && !!values.year;
 
   const breakdown = useMemo(
     () =>
-      calculatePrice({
-        category: values.car_category,
-        modelId: values.car_model || undefined,
-        year: Number(values.year),
-        condition: values.condition,
-      }),
-    [values.car_category, values.car_model, values.year, values.condition],
+      breakdownReady
+        ? calculatePrice({
+            brand: values.brand,
+            modelId: values.car_model,
+            year: Number(values.year),
+            condition: values.condition,
+          })
+        : null,
+    [breakdownReady, values.brand, values.car_model, values.year, values.condition],
   );
 
   async function handleSubmit(data: LeadInput) {
     setSubmitting(true);
     try {
+      const brandLabel = CAR_BRANDS.find((b) => b.id === data.brand)?.label ?? data.brand;
       const { error } = await supabase.from("leads").insert({
         name: data.name,
         phone: data.phone,
         city: data.city,
-        car_category: data.car_category,
-        car_model: data.car_model || null,
+        car_category: brandLabel, // legacy column kept populated with brand label
+        brand: brandLabel,
+        car_model: CAR_MODELS.find((m) => m.id === data.car_model)?.label ?? data.car_model,
+        fuel_type: data.fuel_type,
         year: data.year,
         condition: data.condition,
-        estimated_price_min: breakdown.min,
-        estimated_price_max: breakdown.max,
+        km_driven: data.km_driven,
+        notes: data.notes || null,
+        estimated_price_min: breakdown?.min ?? null,
+        estimated_price_max: breakdown?.max ?? null,
         source,
         status: "new",
       });
       if (error) throw error;
 
-      // Fire and forget admin notification
       supabase.functions
         .invoke("notify-admin-lead", {
           body: {
             ...data,
-            estimated_price_min: breakdown.min,
-            estimated_price_max: breakdown.max,
+            brand: brandLabel,
+            estimated_price_min: breakdown?.min,
+            estimated_price_max: breakdown?.max,
             source,
           },
         })
-        .catch(() => {/* silent */});
+        .catch(() => {
+          /* silent */
+        });
 
       setSubmitted(true);
       toast.success("Request received! Our team will call you shortly.");
@@ -150,7 +155,14 @@ export function LeadFormDialog({
   async function next() {
     let valid = false;
     if (step === 0) {
-      valid = await form.trigger(["car_category", "year", "condition"]);
+      valid = await form.trigger([
+        "brand",
+        "car_model",
+        "fuel_type",
+        "year",
+        "condition",
+        "km_driven",
+      ]);
     } else if (step === 1) {
       valid = await form.trigger(["name", "phone", "city"]);
     }
@@ -166,12 +178,16 @@ export function LeadFormDialog({
               <CheckCircle2 className="h-8 w-8 text-accent-green" />
             </div>
             <DialogTitle className="text-2xl">Request Received!</DialogTitle>
-            <p className="text-muted-foreground">
-              Estimated quote: <strong className="text-primary">{formatINR(breakdown.min)} – {formatINR(breakdown.max)}</strong>
-            </p>
+            {breakdown && (
+              <p className="text-muted-foreground">
+                Estimated quote:{" "}
+                <strong className="text-primary">
+                  {formatINR(breakdown.min)} – {formatINR(breakdown.max)}
+                </strong>
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
-              Our team will call you on <strong>{values.phone}</strong> shortly
-              to confirm pickup.
+              Our team will call you on <strong>{values.phone}</strong> shortly to confirm pickup.
             </p>
             <Button onClick={() => onOpenChange(false)} className="mt-4">
               Done
@@ -193,23 +209,23 @@ export function LeadFormDialog({
               noValidate
             >
               {step === 0 && (
-                <div className="space-y-4 animate-fade-in">
+                <div className="grid sm:grid-cols-2 gap-4 animate-fade-in">
                   <div>
-                    <Label>Car type</Label>
+                    <Label>Brand</Label>
                     <Select
-                      value={values.car_category}
+                      value={values.brand || ""}
                       onValueChange={(v) => {
-                        form.setValue("car_category", v);
-                        form.setValue("car_model", "");
+                        form.setValue("brand", v, { shouldValidate: true });
+                        form.setValue("car_model", "", { shouldValidate: true });
                       }}
                     >
                       <SelectTrigger className="mt-1.5">
-                        <SelectValue />
+                        <SelectValue placeholder="Select brand" />
                       </SelectTrigger>
                       <SelectContent>
-                        {CAR_CATEGORIES.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.label}
+                        {CAR_BRANDS.map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -217,20 +233,16 @@ export function LeadFormDialog({
                   </div>
 
                   <div>
-                    <Label>
-                      Model <span className="text-muted-foreground text-xs font-normal">(optional, more accurate)</span>
-                    </Label>
+                    <Label>Model</Label>
                     <Select
-                      value={values.car_model || "_none"}
-                      onValueChange={(v) =>
-                        form.setValue("car_model", v === "_none" ? "" : v)
-                      }
+                      value={values.car_model || ""}
+                      onValueChange={(v) => form.setValue("car_model", v, { shouldValidate: true })}
+                      disabled={!values.brand}
                     >
                       <SelectTrigger className="mt-1.5">
-                        <SelectValue placeholder="Choose your model" />
+                        <SelectValue placeholder={values.brand ? "Select model" : "Select brand first"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="_none">Skip — use category average</SelectItem>
                         {filteredModels.map((m) => (
                           <SelectItem key={m.id} value={m.id}>
                             {m.label}
@@ -241,51 +253,116 @@ export function LeadFormDialog({
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between">
-                      <Label>Manufacturing year</Label>
-                      <span className="text-sm font-semibold text-primary">
-                        {values.year}
-                      </span>
-                    </div>
-                    <Slider
-                      value={[values.year]}
-                      min={MIN_YEAR}
-                      max={MAX_YEAR}
-                      step={1}
-                      onValueChange={([v]) => form.setValue("year", v)}
-                      className="mt-3"
-                    />
+                    <Label>Manufacturing year</Label>
+                    <Select
+                      value={values.year ? String(values.year) : ""}
+                      onValueChange={(v) =>
+                        form.setValue("year", Number(v), { shouldValidate: true })
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select year" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {YEAR_OPTIONS.map((y) => (
+                          <SelectItem key={y} value={String(y)}>
+                            {y}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
                     <Label>Condition</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-1.5">
-                      {(Object.keys(CONDITION_LABELS) as Condition[]).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => form.setValue("condition", c)}
-                          className={cn(
-                            "py-2.5 rounded-lg border text-sm font-medium transition-base",
-                            values.condition === c
-                              ? "border-accent-green bg-accent-green-soft text-accent-green"
-                              : "border-border hover:border-primary/30",
-                          )}
-                        >
-                          {CONDITION_LABELS[c]}
-                        </button>
-                      ))}
-                    </div>
+                    <Select
+                      value={values.condition || ""}
+                      onValueChange={(v) =>
+                        form.setValue("condition", v as Condition, { shouldValidate: true })
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select condition" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(CONDITION_LABELS) as Condition[]).map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {CONDITION_LABELS[c]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="rounded-lg bg-gradient-soft border p-4 text-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      Estimated price
-                    </p>
-                    <p className="text-2xl font-bold text-primary mt-1 font-[Poppins]">
-                      {formatINR(breakdown.min)} – {formatINR(breakdown.max)}
-                    </p>
+                  <div>
+                    <Label>Kilometers driven</Label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={values.km_driven ?? ""}
+                      onChange={(e) =>
+                        form.setValue(
+                          "km_driven",
+                          e.target.value === "" ? (undefined as unknown as number) : Number(e.target.value),
+                          { shouldValidate: true },
+                        )
+                      }
+                      placeholder="e.g. 85000"
+                      className="mt-1.5"
+                    />
                   </div>
+
+                  <div>
+                    <Label>Fuel type</Label>
+                    <Select
+                      value={values.fuel_type || ""}
+                      onValueChange={(v) =>
+                        form.setValue("fuel_type", v as LeadInput["fuel_type"], {
+                          shouldValidate: true,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-1.5">
+                        <SelectValue placeholder="Select fuel type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {FUEL_TYPES.map((f) => (
+                          <SelectItem key={f.id} value={f.id}>
+                            {f.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <Label>
+                      Additional notes{" "}
+                      <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+                    </Label>
+                    <Textarea
+                      value={values.notes ?? ""}
+                      onChange={(e) =>
+                        form.setValue("notes", e.target.value, { shouldValidate: true })
+                      }
+                      placeholder="Any damage, missing parts, accident history…"
+                      rows={3}
+                      maxLength={500}
+                      className="mt-1.5 resize-none"
+                    />
+                  </div>
+
+                  {breakdown && (
+                    <div className="sm:col-span-2 rounded-lg bg-gradient-soft border p-4 text-center">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Estimated price
+                      </p>
+                      <p className="text-2xl font-bold text-primary mt-1 font-[Poppins]">
+                        {formatINR(breakdown.min)} – {formatINR(breakdown.max)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -352,27 +429,36 @@ export function LeadFormDialog({
                     <Row label="City" value={values.city} />
                     <Row
                       label="Car"
-                      value={
-                        (values.car_model
-                          ? CAR_MODELS.find((m) => m.id === values.car_model)?.label
-                          : CAR_CATEGORIES.find((c) => c.id === values.car_category)?.label) ?? "—"
-                      }
+                      value={`${
+                        CAR_BRANDS.find((b) => b.id === values.brand)?.label ?? "—"
+                      } ${CAR_MODELS.find((m) => m.id === values.car_model)?.label ?? ""}`.trim()}
                     />
-                    <Row label="Year" value={String(values.year)} />
-                    <Row label="Condition" value={CONDITION_LABELS[values.condition]} />
+                    <Row label="Year" value={String(values.year ?? "—")} />
+                    <Row
+                      label="Fuel"
+                      value={FUEL_TYPES.find((f) => f.id === values.fuel_type)?.label ?? "—"}
+                    />
+                    <Row label="KM driven" value={`${values.km_driven ?? "—"} km`} />
+                    <Row
+                      label="Condition"
+                      value={values.condition ? CONDITION_LABELS[values.condition] : "—"}
+                    />
+                    {values.notes && <Row label="Notes" value={values.notes} />}
                   </div>
 
-                  <div className="rounded-lg bg-gradient-cta text-accent-green-foreground p-5 text-center">
-                    <p className="text-xs uppercase tracking-wide opacity-90">
-                      Your estimated quote
-                    </p>
-                    <p className="text-3xl font-bold mt-1 font-[Poppins]">
-                      {formatINR(breakdown.min)} – {formatINR(breakdown.max)}
-                    </p>
-                    <p className="text-xs mt-2 opacity-90">
-                      Final price confirmed after physical inspection
-                    </p>
-                  </div>
+                  {breakdown && (
+                    <div className="rounded-lg bg-gradient-cta text-accent-green-foreground p-5 text-center">
+                      <p className="text-xs uppercase tracking-wide opacity-90">
+                        Your estimated quote
+                      </p>
+                      <p className="text-3xl font-bold mt-1 font-[Poppins]">
+                        {formatINR(breakdown.min)} – {formatINR(breakdown.max)}
+                      </p>
+                      <p className="text-xs mt-2 opacity-90">
+                        Final price confirmed after physical inspection
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -388,12 +474,7 @@ export function LeadFormDialog({
                   </Button>
                 )}
                 {step < STEPS.length - 1 ? (
-                  <Button
-                    type="button"
-                    variant="cta"
-                    onClick={next}
-                    className="flex-1"
-                  >
+                  <Button type="button" variant="cta" onClick={next} className="flex-1">
                     Continue
                   </Button>
                 ) : (

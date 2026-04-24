@@ -17,14 +17,25 @@ export const leadSchema = z.object({
     .trim()
     .min(2, "Please enter your city")
     .max(80, "City name too long"),
-  car_category: z.string().min(1, "Select a car type"),
-  car_model: z.string().max(80).optional().or(z.literal("")),
+  brand: z.string().min(1, "Select a brand"),
+  car_model: z.string().min(1, "Select a model"),
+  fuel_type: z.enum(["petrol", "diesel", "cng", "lpg", "electric"], {
+    errorMap: () => ({ message: "Select fuel type" }),
+  }),
   year: z
     .number()
     .int()
-    .min(1980, "Year too old")
+    .min(1995, "Year too old")
     .max(new Date().getFullYear(), "Invalid year"),
-  condition: z.enum(["excellent", "good", "poor"]),
+  condition: z.enum(["excellent", "good", "poor"], {
+    errorMap: () => ({ message: "Select condition" }),
+  }),
+  km_driven: z
+    .number()
+    .int()
+    .min(0, "Enter kilometers driven")
+    .max(1_000_000, "Value too high"),
+  notes: z.string().max(500, "Notes too long").optional().or(z.literal("")),
 });
 
 export type LeadInput = z.infer<typeof leadSchema>;
