@@ -2,7 +2,7 @@
 // otherwise just logs the lead so the admin can pick it up from the dashboard).
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.104.1/cors";
 
-const ADMIN_EMAIL = "turbo.rony@yahoo.com";
+const ADMIN_EMAIL = "car2scrap01@gmail.com";
 const FROM = "car2scrap <onboarding@resend.dev>";
 
 interface Lead {
