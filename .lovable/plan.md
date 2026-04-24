@@ -1,132 +1,83 @@
+# Restructure price calculator to brand → model dropdowns
 
+Replace the current "category + slider" calculator with a structured dropdown-driven form matching your reference image.
 
-# car2scrap — Implementation Plan
+## New form fields (all required)
 
-A modern, conversion-focused website for a car scrap & recycling service in India, with lead capture, an interactive price calculator, WhatsApp integration, and a real admin dashboard.
+1. **Brand** — dropdown (~20 brands)
+2. **Model** — dropdown, filtered by selected brand
+3. **Fuel type** — dropdown: Petrol, Diesel, CNG, LPG, Electric
+4. **Manufacturing year** — dropdown, current year → 1995 (newest first)
+5. **Condition** — dropdown: Excellent, Good, Poor (kept as buttons or moved to dropdown for consistency — will use dropdown to match the reference)
+6. **Kilometers driven** — number input
+7. **Additional notes** — textarea (optional)
 
-## Pages & Structure
+The **"Calculate Price" CTA stays disabled** until brand, model, fuel type, year, condition, and km are filled. Pricing logic stays as today (weight × ₹38/kg × age factor × condition factor) — fuel and km are collected for the lead but don't change the estimate, per your decision.
+
+## Brand & model catalog
+
+Restructure `src/lib/calculator.ts` around brands instead of body-type categories. ~20 brands with their popular India models:
 
 ```text
-/                  Landing (hero + calculator + how it works + trust + testimonials + CTA)
-/calculator        Full price calculator page
-/services          Services offered (scrapping, pickup, RC cancellation, etc.)
-/how-it-works      3-step process detail
-/contact           Main conversion page (form + phone + WhatsApp + map)
-/auth              Admin login (email/password)
-/admin             Protected admin dashboard (lead list, filters, status updates)
+Maruti Suzuki  → Alto, WagonR, Swift, Dzire, Baleno, Brezza, Ertiga, Ciaz, Celerio, S-Presso, Eeco, Omni, 800
+Hyundai        → Santro, i10, Grand i10, i20, Verna, Creta, Venue, Xcent, Accent, Eon
+Tata           → Indica, Indigo, Tiago, Tigor, Nexon, Punch, Harrier, Safari, Sumo, Zest
+Mahindra       → Bolero, Scorpio, XUV300, XUV500, XUV700, Thar, KUV100, TUV300, Marazzo, Verito
+Honda          → City, Amaze, Civic, Jazz, WR-V, BR-V, Brio, Mobilio, CR-V
+Toyota         → Innova, Etios, Liva, Corolla, Fortuner, Yaris, Glanza, Urban Cruiser, Qualis
+Renault        → Kwid, Duster, Triber, Kiger, Lodgy, Pulse, Scala
+Ford           → EcoSport, Figo, Aspire, Endeavour, Ikon, Fiesta
+Nissan         → Micra, Sunny, Magnite, Terrano, Kicks
+Chevrolet      → Beat, Spark, Sail, Cruze, Tavera, Aveo
+Skoda          → Rapid, Octavia, Fabia, Superb, Kushaq
+Volkswagen     → Polo, Vento, Ameo, Jetta, Taigun
+Kia            → Seltos, Sonet, Carens, Carnival
+MG             → Hector, Astor, ZS EV
+Datsun         → Go, Go+, Redi-Go
+Fiat           → Punto, Linea, Palio
+Mitsubishi     → Lancer, Pajero, Outlander
+Jeep           → Compass, Meridian, Wrangler
+BMW            → 3 Series, 5 Series, X1, X3
+Mercedes-Benz  → C-Class, E-Class, GLA, GLC
+Other(not listed)
 ```
 
-Plus a sticky "Get Best Price" CTA on every public page, a global lead-form modal, and a floating WhatsApp button.
+Each model keeps its kerb weight (existing weights reused where possible; sensible defaults for the rest based on body type). `Other` option added at the end of brand and model lists for fallback.
 
-## Design System
+## Pricing (unchanged behavior, confirmed)
 
-- Style: clean modern SaaS, inspired by Stripe/Razorpay
-- Palette: dark navy `#0B1220`, white `#FFFFFF`, accent green `#10B981` (eco/trust), accent blue `#3B82F6` (action)
-- Fonts: Inter (body) + Poppins (headings) via Google Fonts
-- Tokens defined in `index.css` + `tailwind.config.ts` (HSL semantic tokens — no hardcoded colors in components)
-- Components: shadcn/ui (Button, Card, Dialog, Form, Input, Select, Slider, Tabs, Badge, Toast)
-- Mobile-first, smooth transitions, subtle motion on CTAs and calculator updates
-
-## Price Calculator Logic
-
-Inputs:
-- **Category** (required): Hatchback / Sedan / SUV / Pickup-Truck — average kerb weights (900 / 1200 / 1600 / 1800 kg)
-- **Model** (optional): ~25 popular Indian models (Maruti Alto, Swift, WagonR, Baleno, Dzire, Hyundai i10, i20, Creta, Honda City, Amaze, Tata Nexon, Tiago, Mahindra Bolero, Scorpio, XUV500, Toyota Innova, Etios, Renault Kwid, Ford EcoSport, etc.) — overrides category weight when chosen
-- **Year**: slider 1995 – current year
-- **Condition**: Excellent / Good / Poor (button group)
-
-Formula:
-```
-basePrice = weight_kg × scrapRatePerKg     // ₹38/kg default
-ageFactor = max(0.55, 1 − (age × 0.018))   // ~1.8% depreciation per year, floor 55%
-conditionFactor = { Excellent: 1.10, Good: 1.00, Poor: 0.85 }
-estimate = basePrice × ageFactor × conditionFactor
-range = [estimate × 0.92, estimate × 1.08]
+```text
+estimate = weight × ₹38/kg × ageFactor × conditionFactor
+ageFactor       = max(0.55, 1 − years_old × 0.018)
+conditionFactor = Excellent 1.10 / Good 1.00 / Poor 0.85
+range           = ±8% around estimate, rounded to nearest ₹100
 ```
 
-Output:
-- Big price range (e.g., ₹22,400 – ₹26,300)
-- Breakdown card: metal value, age adjustment, condition adjustment
-- Disclaimer: "Final price may vary after physical inspection"
-- Primary CTA: "Book Free Pickup" → opens lead form pre-filled with calculator values
+Fuel type, km, and notes are stored on the lead but don't alter the displayed estimate.
 
-## Lead Capture
+## Files touched
 
-Multi-step form (3 steps with progress bar):
-1. Car details: model, year, condition
-2. Contact: name, phone (10-digit India), city
-3. Review + submit
+- `**src/lib/calculator.ts**` — replace `CAR_CATEGORIES` with `CAR_BRANDS`, expand `CAR_MODELS` with `brand` field + weights, add `FUEL_TYPES` constant. Keep `calculatePrice()` signature compatible (accepts `modelId` + `year` + `condition`).
+- `**src/components/PriceCalculator.tsx**` — full rewrite of the form: 6 dropdowns + km input + notes textarea, two-column grid on desktop matching the reference layout. Year slider removed. Estimate panel and breakdown drawer kept. CTA disabled until required fields are filled.
+- `**src/components/LeadFormDialog.tsx**` — Step 1 ("Car details") updated to the same dropdown structure so prefill from the calculator flows through cleanly. Adds fuel/km/notes capture.
+- `**src/lib/validation.ts**` — extend `leadSchema`: add `brand` (required), make `car_model` required, add `fuel_type` enum, add `km_driven` number (≥0), add `notes` (optional, max 500). `car_category` removed.
+- `**src/pages/Calculator.tsx**` — minor: update the "How we calculate" sidebar copy to mention brand/model selection.
+- **Database** — add nullable columns to `leads`: `brand text`, `fuel_type text`, `km_driven integer`, `notes text`. Existing rows stay valid; new submissions populate them.
 
-Validation with `react-hook-form` + `zod` (length limits, India phone regex). On submit: insert into `leads` table → invoke `notify-admin-lead` edge function → toast + thank-you state.
+## Layout
 
-Triggers everywhere: hero CTA, sticky CTA, calculator CTA, services cards, contact page — all open the same `LeadFormDialog` (or route to `/contact` on dedicated nav clicks).
+Two-column grid on desktop (mirrors your reference), single column on mobile:
 
-## Trust & Conversion Elements
-
-- Badges row: "Govt. Authorized", "Instant Payment", "Free Pickup", "RC Cancellation Support", "Eco-Certified Recycling"
-- Testimonials carousel (3–4 seeded)
-- Live activity ticker: rotating messages like "Rohit from Delhi booked 12 min ago" (client-side rotation from a seeded list — clearly synthetic, not deceptive about volume)
-- Stats strip: "10,000+ cars scrapped", "50+ cities", "₹4.5 Cr paid out"
-
-## Contact Page
-
-- Lead form (same component)
-- Phone: `+91 98089 03131` (tel: link)
-- WhatsApp button: `https://wa.me/919808903131?text=Hi%2C%20I%20want%20a%20scrap%20price%20quote%20for%20my%20car`
-- Address: Gata No.142, Near Testify Rice Mill, Rajarampur, Sikandarabad Industrial Area, Bulandshahar – 203205
-- Embedded Google Maps iframe pinned to that address
-- Floating WhatsApp FAB on every page
-
-## Backend (Lovable Cloud)
-
-Tables:
-- `leads` — id, name, phone, city, car_category, car_model, year, condition, estimated_price_min, estimated_price_max, source, status (new/contacted/converted/rejected), notes, created_at
-- `user_roles` — id, user_id, role (enum: admin, user) — separate table per security best practices, with `has_role()` SECURITY DEFINER function
-- `profiles` — id, user_id, email, full_name, created_at (auto-created on signup via trigger)
-
-RLS:
-- `leads`: anyone can INSERT (public form); only admins can SELECT/UPDATE
-- `user_roles`: only admins can manage; users can read their own role
-- `profiles`: users read/update their own
-
-Edge function:
-- `notify-admin-lead` — triggered after lead insert; sends email to `turbo.rony@yahoo.com` via Lovable's built-in transactional email system (no third-party API key needed). Subject + formatted lead details.
-
-Email infrastructure:
-- Set up email domain (user prompted via setup dialog)
-- Use built-in `send-transactional-email` function with a custom `new-lead-notification` template
-
-## Admin Dashboard
-
-- `/auth` — email/password login (Lovable Cloud auth, email confirmation off for fast admin onboarding)
-- Initial admin: after first signup with `turbo.rony@yahoo.com`, a one-time SQL insert grants the `admin` role
-- `/admin` — protected route (redirects to `/auth` if not logged in or not admin):
-  - KPI cards: total leads, new today, conversion rate
-  - Filterable table: status, city, date range, search by name/phone
-  - Click row → side sheet with full details + status dropdown + notes textarea
-  - Export CSV button
-
-## Technical Implementation
-
-- React 18 + Vite + TypeScript + Tailwind + shadcn
-- React Router for routing
-- React Hook Form + Zod for all forms
-- TanStack Query for admin data fetching
-- Supabase JS client (auto-configured by Lovable Cloud)
-- `sonner` for toasts
-- Auth: `onAuthStateChange` listener set BEFORE `getSession()`; `ProtectedRoute` wrapper checks both session and `has_role(uid, 'admin')`
-- All inputs validated client + server (RLS + zod)
-- WhatsApp link uses `encodeURIComponent` for the prefilled message
-
-## Build Order
-
-1. Enable Lovable Cloud, create tables + RLS + roles function
-2. Design system (tokens, fonts, base layout, header, footer, sticky CTA, WhatsApp FAB)
-3. Landing page with hero, calculator, how-it-works, trust, testimonials, live activity
-4. Lead form dialog (multi-step) + insert logic
-5. Contact, Services, How It Works, Calculator pages
-6. Email domain setup + transactional email template + `notify-admin-lead` trigger
-7. Auth page + admin role bootstrap for `turbo.rony@yahoo.com`
-8. Admin dashboard with table, filters, status updates, CSV export
-9. Polish: animations, mobile QA, accessibility pass
-
+```text
+┌────────────── Tell us about your car ──────────────┐
+│ [Brand ▾]              [Model ▾]                   │
+│ [Year ▾]               [Condition ▾]               │
+│ [Kilometers driven]    [Fuel type ▾]               │
+│ [Additional notes ──────────────────────────────]  │
+│                                                    │
+│ ┌──────── Estimated scrap value ────────┐          │
+│ │           ₹ XX,XXX – ₹ XX,XXX         │          │
+│ └───────────────────────────────────────┘          │
+│ [ Book Free Pickup at This Price ]                 │
+└────────────────────────────────────────────────────┘
+```
