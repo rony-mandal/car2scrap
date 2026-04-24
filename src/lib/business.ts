@@ -7,7 +7,7 @@ export const BUSINESS = {
   address:
     "Gate No.142, Near Testify Rice Mill, Rajarampur, Sikandarabad Industrial Area, Bulandshahar – 203205",
   mapsEmbed:
-    "https://www.google.com/maps/place/Bharat+Scrap+Facilities/@28.4911672,77.6554634,17z/data=!3m1!4b1!4m6!3m5!1s0x390c976969c55465:0xdb1c8da4d55fcc5f!8m2!3d28.4911626!4d77.6603343!16s%2Fg%2F11n4mv674j?entry=ttu&g_ep=EgoyMDI2MDQyMS4wIKXMDSoASAFQAw%3D%3D",
+    "https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d224423.30900155852!2d77.660334!3d28.491163000000004!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390c976969c55465%3A0xdb1c8da4d55fcc5f!2sBharat%20Scrap%20Facilities!5e0!3m2!1sen!2sin!4v1777031500894!5m2!1sen!2sin",
 } as const;
 
 export function whatsappLink(message?: string): string {
