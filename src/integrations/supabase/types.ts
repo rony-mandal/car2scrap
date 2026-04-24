@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       leads: {
         Row: {
+          brand: string | null
           car_category: string
           car_model: string | null
           city: string
@@ -23,7 +24,9 @@ export type Database = {
           created_at: string
           estimated_price_max: number | null
           estimated_price_min: number | null
+          fuel_type: string | null
           id: string
+          km_driven: number | null
           name: string
           notes: string | null
           phone: string
@@ -33,6 +36,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          brand?: string | null
           car_category: string
           car_model?: string | null
           city: string
@@ -40,7 +44,9 @@ export type Database = {
           created_at?: string
           estimated_price_max?: number | null
           estimated_price_min?: number | null
+          fuel_type?: string | null
           id?: string
+          km_driven?: number | null
           name: string
           notes?: string | null
           phone: string
@@ -50,6 +56,7 @@ export type Database = {
           year: number
         }
         Update: {
+          brand?: string | null
           car_category?: string
           car_model?: string | null
           city?: string
@@ -57,7 +64,9 @@ export type Database = {
           created_at?: string
           estimated_price_max?: number | null
           estimated_price_min?: number | null
+          fuel_type?: string | null
           id?: string
+          km_driven?: number | null
           name?: string
           notes?: string | null
           phone?: string
