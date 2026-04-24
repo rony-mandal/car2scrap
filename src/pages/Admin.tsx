@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import {
   Select,
   SelectContent,
@@ -35,6 +34,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { CONDITION_LABELS, formatINR } from "@/lib/calculator";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 type LeadStatus = "new" | "contacted" | "converted" | "rejected";
 
@@ -168,21 +168,13 @@ export default function Admin() {
             <span className="font-[Poppins]">Admin Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
-  <span className="hidden sm:inline text-xs text-muted-foreground">
-    {user?.email}
-  </span>
-  <Button variant="outline" size="sm" onClick={() => setChangePwOpen(true)}>
-    <KeyRound className="h-4 w-4" />
-    <span className="hidden sm:inline">Change Password</span>
-  </Button>
-  <Button variant="outline" size="sm" onClick={signOut}>
-    <LogOut className="h-4 w-4" />
-    Sign out
-  </Button>
-</div>>
             <span className="hidden sm:inline text-xs text-muted-foreground">
               {user?.email}
             </span>
+            <Button variant="outline" size="sm" onClick={() => setChangePwOpen(true)}>
+              <KeyRound className="h-4 w-4" />
+              <span className="hidden sm:inline">Change Password</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="h-4 w-4" />
               Sign out
@@ -350,6 +342,8 @@ export default function Admin() {
           )}
         </SheetContent>
       </Sheet>
+
+      <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
     </div>
   );
 }
@@ -376,7 +370,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-0.5 font-medium">{children}</p>
-      <ChangePasswordDialog open={changePwOpen} onOpenChange={setChangePwOpen} />
     </div>
   );
 }
