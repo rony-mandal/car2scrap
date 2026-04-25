@@ -1,9 +1,10 @@
 import { Link, NavLink as RouterNavLink } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Recycle } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { LeadFormDialog } from "@/components/LeadFormDialog";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo-transparent.png";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -21,14 +22,12 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="container flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-cta text-accent-green-foreground">
-              <Recycle className="h-5 w-5" />
-            </span>
-            <span className="font-[Poppins]">
-              Car<span className="text-accent-green">2</span>Scrap
-            </span>
-          </Link>
+          <Link to="/" className="flex items-center gap-3">
+  <img src={logo} className="h-10 w-auto object-contain" />
+  <span className="text-lg font-bold font-[Poppins] tracking-tight">
+    Car<span className="text-accent-green">2</span>Scrap
+  </span>
+</Link>
 
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (

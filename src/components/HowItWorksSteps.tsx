@@ -11,7 +11,7 @@ const STEPS = [
     n: 2,
     icon: PhoneCall,
     title: "Schedule Free Pickup",
-    desc: "Our team calls you within 30 minutes to confirm details and book a doorstep pickup at your convenience.",
+    desc: "Our team calls you to confirm details and book a free doorstep pickup at your convenience.",
   },
   {
     n: 3,

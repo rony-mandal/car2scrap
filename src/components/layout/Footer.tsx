@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { Recycle, Mail, Phone, MapPin, Instagram, Facebook } from "lucide-react";
 import { BUSINESS } from "@/lib/business";
+import logo from "@/assets/logo-transparent.png";
+
 
 export function Footer() {
   return (
@@ -8,13 +10,15 @@ export function Footer() {
       <div className="container py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-cta">
-              <Recycle className="h-5 w-5" />
-            </span>
-            <span className="font-[Poppins]">
-              Car<span className="text-accent-green">2</span>Scrap
-            </span>
-          </Link>
+  <img
+    src={logo}
+    alt="Car2Scrap Logo"
+    className="h-9 w-auto object-contain rounded-lg"
+  />
+  <span className="font-[Poppins]">
+    Car<span className="text-accent-green">2</span>Scrap
+  </span>
+</Link>
           <p className="mt-4 text-sm text-primary-foreground/70 leading-relaxed">
             India's trusted car scrap & recycling platform. Govt. authorized,
             instant payment, free pickup.

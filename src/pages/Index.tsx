@@ -8,7 +8,7 @@ import { Testimonials } from "@/components/Testimonials";
 import { HowItWorksSteps } from "@/components/HowItWorksSteps";
 import { LiveActivity } from "@/components/LiveActivity";
 import { LeadFormDialog } from "@/components/LeadFormDialog";
-import heroImg from "@/assets/hero-car.jpg";
+import CustomerCarousel from "@/components/CustomerCarousel";
 
 const Index = () => {
   const [open, setOpen] = useState(false);
@@ -70,12 +70,9 @@ const Index = () => {
 
           <div className="relative">
             <div className="absolute -inset-6 bg-accent-green/15 blur-3xl rounded-full" aria-hidden />
-            <img
-              src={heroImg}
-              alt="Old car ready for eco-friendly scrapping"
-              className="relative rounded-2xl shadow-elegant w-full"
-              loading="eager"
-            />
+            <div className="relative rounded-2xl shadow-elegant w-full h-[500px] md:h-[600px] overflow-hidden">
+  <CustomerCarousel />
+</div>
           </div>
         </div>
 
