@@ -21,59 +21,143 @@ const Index = () => {
           className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_30%_20%,white_1px,transparent_1px)]"
           style={{ backgroundSize: "24px 24px" }}
         />
-        <div className="container relative py-12 md:py-20 grid lg:grid-cols-2 gap-10 items-center">
-          <div className="space-y-6 animate-slide-up">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium backdrop-blur">
-              <ShieldCheck className="h-3.5 w-3.5 text-accent-green" />
-              Govt. Authorized Vehicle Recycler
+
+        {/*
+          LAYOUT STRATEGY:
+          - All screens: single column, text on top, image below
+          - lg (1024px+): two columns side by side using CSS grid with explicit column sizes
+          
+          We avoid flex-1 / auto sizing that caused the tablet breakage.
+          On desktop, left col = 55% (text), right col = 45% (image).
+          Carousel container always has a FIXED pixel height — never percentage or auto.
+        */}
+        <div className="container relative py-10 lg:py-20">
+
+          {/* ── MOBILE + TABLET: stacked layout ── */}
+          <div className="block lg:hidden space-y-8">
+            {/* Text block */}
+            <div className="space-y-5 animate-slide-up">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5 text-accent-green" />
+                Govt. Authorized Vehicle Recycler
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl font-extrabold leading-[1.1] font-[Poppins]">
+                Get the <span className="text-accent-green">Best Price</span> for Your Old Car
+              </h1>
+
+              <p className="text-base text-primary-foreground/80">
+                Free doorstep pickup, instant UPI payment, and complete RC cancellation —
+                all handled by India's most trusted scrap car platform.
+              </p>
+
+              <ul className="space-y-2">
+                {[
+                  "Instant transparent quote",
+                  "Free doorstep pickup",
+                  "Payment before pickup",
+                  "RC cancellation included",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-primary-foreground/90">
+                    <CheckCircle2 className="h-4 w-4 text-accent-green shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button variant="cta" size="lg" className="w-full sm:w-auto" onClick={() => setOpen(true)}>
+                  Get Best Price <ArrowRight className="h-5 w-5" />
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto bg-white/10 text-primary-foreground border-white/20 hover:bg-white/15 hover:text-primary-foreground"
+                >
+                  <Link to="/calculator">Try the Calculator</Link>
+                </Button>
+              </div>
+
+              <LiveActivity />
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] font-[Poppins]">
-              Get the <span className="text-accent-green">Best Price</span> for Your Old Car
-            </h1>
+            {/* Image block — fixed height so Swiper always has something to measure */}
+            <div
+              className="relative rounded-2xl shadow-elegant overflow-hidden w-full"
+              style={{ height: "280px" }}
+            >
+              <CustomerCarousel />
+            </div>
+          </div>
 
-            <p className="text-lg text-primary-foreground/80 max-w-xl">
-              Free doorstep pickup, instant UPI payment, and complete RC cancellation —
-              all handled by India's most trusted scrap car platform.
-            </p>
+          {/* ── DESKTOP (lg+): two-column grid ── */}
+          <div
+            className="hidden lg:grid items-center gap-10"
+            style={{ gridTemplateColumns: "55% 45%" }}
+          >
+            {/* Left: Text */}
+            <div className="space-y-6 animate-slide-up">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium backdrop-blur">
+                <ShieldCheck className="h-3.5 w-3.5 text-accent-green" />
+                Govt. Authorized Vehicle Recycler
+              </div>
 
-            <ul className="grid sm:grid-cols-2 gap-2 max-w-xl">
-              {[
-                "Instant transparent quote",
-                "Free doorstep pickup",
-                "Payment before pickup",
-                "RC cancellation included",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm text-primary-foreground/90">
-                  <CheckCircle2 className="h-4 w-4 text-accent-green shrink-0" />
-                  {f}
-                </li>
-              ))}
-            </ul>
+              <h1 className="text-5xl xl:text-6xl font-extrabold leading-[1.1] font-[Poppins]">
+                Get the <span className="text-accent-green">Best Price</span> for Your Old Car
+              </h1>
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Button variant="cta" size="xl" onClick={() => setOpen(true)}>
-                Get Best Price <ArrowRight className="h-5 w-5" />
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="xl"
-                className="bg-white/10 text-primary-foreground border-white/20 hover:bg-white/15 hover:text-primary-foreground"
+              <p className="text-lg text-primary-foreground/80 max-w-xl">
+                Free doorstep pickup, instant UPI payment, and complete RC cancellation —
+                all handled by India's most trusted scrap car platform.
+              </p>
+
+              <ul className="grid grid-cols-2 gap-2 max-w-xl">
+                {[
+                  "Instant transparent quote",
+                  "Free doorstep pickup",
+                  "Payment before pickup",
+                  "RC cancellation included",
+                ].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-primary-foreground/90">
+                    <CheckCircle2 className="h-4 w-4 text-accent-green shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button variant="cta" size="xl" onClick={() => setOpen(true)}>
+                  Get Best Price <ArrowRight className="h-5 w-5" />
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="xl"
+                  className="bg-white/10 text-primary-foreground border-white/20 hover:bg-white/15 hover:text-primary-foreground"
+                >
+                  <Link to="/calculator">Try the Calculator</Link>
+                </Button>
+              </div>
+
+              <LiveActivity />
+            </div>
+
+            {/* Right: Carousel — fixed pixel height, no percentage */}
+            <div className="relative">
+              <div
+                className="absolute -inset-6 bg-accent-green/15 blur-3xl rounded-full pointer-events-none"
+                aria-hidden
+              />
+              <div
+                className="relative rounded-2xl shadow-elegant overflow-hidden w-full"
+                style={{ height: "480px" }}
               >
-                <Link to="/calculator">Try the Calculator</Link>
-              </Button>
+                <CustomerCarousel />
+              </div>
             </div>
-
-            <div className="pt-3"><LiveActivity /></div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-6 bg-accent-green/15 blur-3xl rounded-full" aria-hidden />
-            <div className="relative rounded-2xl shadow-elegant w-full h-[500px] md:h-[600px] overflow-hidden">
-  <CustomerCarousel />
-</div>
-          </div>
         </div>
 
         {/* Stats strip */}
